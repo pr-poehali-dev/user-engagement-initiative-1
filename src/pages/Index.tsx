@@ -1,371 +1,223 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import SlotMachine from "@/components/SlotMachine";
-import SlotCatalog from "@/components/SlotCatalog";
-import BonusSection from "@/components/BonusSection";
+import Layout from "@/components/Layout";
+import { ALL_SLOTS } from "@/data/slots";
 
-const Index = () => {
-  const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
+const FEATURED = ALL_SLOTS.filter(s => s.hot).slice(0, 8);
+const NEW_SLOTS = ALL_SLOTS.filter(s => s.new).slice(0, 8);
+
+const STATS = [
+  { value: "500+", label: "Слотов", icon: "🎰" },
+  { value: "100K+", label: "Игроков", icon: "👥" },
+  { value: "16", label: "Провайдеров", icon: "🏢" },
+  { value: "24/7", label: "Поддержка", icon: "💬" },
+];
+
+const FEATURES = [
+  { icon: "Zap", title: "Мгновенные выплаты", desc: "Вывод средств за несколько минут без лишних проверок" },
+  { icon: "Shield", title: "Безопасная игра", desc: "SSL-шифрование и лицензированная платформа" },
+  { icon: "TrendingUp", title: "Высокий RTP", desc: "Средний RTP слотов 93–98% — одни из лучших условий" },
+  { icon: "Gift", title: "Бонусы каждый день", desc: "Приветственный бонус 200%, кэшбэк, ежедневные награды" },
+  { icon: "Smartphone", title: "Мобильная версия", desc: "Играй с любого устройства — телефона, планшета, ПК" },
+  { icon: "Headphones", title: "Поддержка 24/7", desc: "Живой чат-бот и операторы на русском языке" },
+];
+
+export default function Index() {
+  const [visible, setVisible] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const observers: Record<string, IntersectionObserver> = {};
-    const sectionIds = ["hero", "features", "how", "slots", "catalog", "pricing", "cta"];
-
-    sectionIds.forEach((id) => {
-      const element = document.getElementById(id);
-      if (!element) return;
-
-      observers[id] = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setVisibleSections((prev) => ({ ...prev, [id]: true }));
-            observers[id].unobserve(element);
-          }
-        },
-        { threshold: 0.15 }
-      );
-
-      observers[id].observe(element);
+    const ids = ["hero","stats","features","popular","cta"];
+    const obs: Record<string, IntersectionObserver> = {};
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      obs[id] = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) { setVisible(p => ({ ...p, [id]: true })); obs[id].unobserve(el); }
+      }, { threshold: 0.1 });
+      obs[id].observe(el);
     });
-
-    return () => {
-      Object.values(observers).forEach((observer) => observer.disconnect());
-    };
+    return () => Object.values(obs).forEach(o => o.disconnect());
   }, []);
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 w-full bg-background/80 backdrop-blur-2xl border-b border-accent/20 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🐾</span>
-            <div className="font-display font-bold text-2xl tracking-tighter bg-gradient-to-r from-white via-accent to-accent/80 bg-clip-text text-transparent">
-              Paw Play Casino
-            </div>
-          </div>
-          <nav className="hidden md:flex gap-10 text-sm font-medium">
-            <a href="#features" className="text-muted-foreground hover:text-white transition-colors">
-              Преимущества
-            </a>
-            <a href="#how" className="text-muted-foreground hover:text-white transition-colors">
-              Как начать
-            </a>
-            <a href="#slots" className="text-muted-foreground hover:text-white transition-colors">
-              Играть
-            </a>
-            <a href="#catalog" className="text-muted-foreground hover:text-white transition-colors">
-              Каталог
-            </a>
-            <a href="#pricing" className="text-muted-foreground hover:text-white transition-colors">
-              Бонусы
-            </a>
-          </nav>
-          <div className="flex gap-3">
-            <button className="px-5 py-2.5 text-sm font-medium border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all text-white">
-              Войти
-            </button>
-            <button className="px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-accent via-accent to-accent/80 text-black rounded-full hover:shadow-lg hover:shadow-accent/40 transition-all font-semibold">
-              Играть сейчас
-            </button>
-          </div>
-        </div>
-      </header>
+  const anim = (id: string) => `transition-all duration-1000 ${visible[id] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`;
 
-      {/* Hero Section */}
-      <section id="hero" className="relative pt-32 pb-32 px-6 min-h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden">
-          <img src="/images/black-hole-gif.gif" alt="Casino atmosphere" className="w-auto h-3/4 object-contain opacity-60" />
+  return (
+    <Layout>
+      {/* Hero */}
+      <section id="hero" className="relative min-h-screen flex items-center overflow-hidden px-6 py-20">
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+          <img src="/images/black-hole-gif.gif" alt="" className="w-auto h-3/4 object-contain opacity-50" />
         </div>
-        {/* Golden gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-amber-950/40" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,197,50,0.08)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-amber-950/40" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,197,50,0.07)_0%,transparent_70%)]" />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div
-              className={`transition-all duration-1000 ${visibleSections["hero"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-            >
-              <div className="mb-8 inline-block">
-                <span className="text-xs font-medium tracking-widest text-accent/80 uppercase">
-                  🎰 Онлайн-казино нового уровня
-                </span>
+            <div className={anim("hero")}>
+              <div className="mb-6 inline-block">
+                <span className="text-xs font-medium tracking-widest text-accent/80 uppercase">🎰 Онлайн-казино нового уровня</span>
               </div>
               <h1 className="text-6xl lg:text-7xl font-display font-black leading-tight mb-8 tracking-tighter">
-                <span className="bg-gradient-to-br from-white via-white to-accent/40 bg-clip-text text-transparent">
-                  Играй. Побеждай.
-                </span>
+                <span className="bg-gradient-to-br from-white via-white to-accent/40 bg-clip-text text-transparent">Играй. Побеждай.</span>
                 <br />
                 <span className="text-accent">Наслаждайся.</span>
               </h1>
               <p className="text-xl text-white/80 leading-relaxed mb-10 max-w-xl font-light">
-                Paw Play Casino — место, где каждый спин приносит азарт.
-                Сотни слотов, живые дилеры и щедрые бонусы ждут тебя прямо сейчас.
+                Paw Play Casino — 500+ слотов от лучших провайдеров, щедрые бонусы и мгновенные выплаты. Начни играть прямо сейчас!
               </p>
-              <div className="flex gap-4 mb-12 flex-col sm:flex-row">
-                <button className="group px-8 py-4 bg-gradient-to-r from-accent to-amber-400 text-black rounded-full hover:shadow-2xl hover:shadow-accent/50 transition-all font-semibold text-lg flex items-center gap-3 justify-center">
-                  Получить бонус
+              <div className="flex gap-4 flex-col sm:flex-row mb-12">
+                <Link to="/slots" className="group px-8 py-4 bg-gradient-to-r from-accent to-amber-400 text-black rounded-full hover:shadow-2xl hover:shadow-accent/50 transition-all font-bold text-lg flex items-center gap-3 justify-center">
+                  Смотреть слоты
                   <Icon name="ArrowRight" size={20} className="group-hover:translate-x-1 transition" />
-                </button>
-                <button className="px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white">
-                  Смотреть игры
-                </button>
+                </Link>
+                <Link to="/bonuses" className="px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white text-center">
+                  🎁 Получить бонус
+                </Link>
               </div>
-              <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/10">
-                <div>
-                  <div className="text-2xl font-bold text-accent mb-2">500+</div>
-                  <p className="text-sm text-white/60">Игровых слотов</p>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-white mb-2">100 000+</div>
-                  <p className="text-sm text-white/60">Игроков по всему миру</p>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-accent mb-2">24/7</div>
-                  <p className="text-sm text-white/60">Живые дилеры</p>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-white/10">
+                {STATS.map(s => (
+                  <div key={s.label} className="text-center">
+                    <div className="text-lg mb-1">{s.icon}</div>
+                    <div className="text-2xl font-black text-accent">{s.value}</div>
+                    <div className="text-xs text-white/60">{s.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div
-              className={`relative h-96 lg:h-[550px] transition-all duration-1000 flex items-center justify-center ${visibleSections["hero"] ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
-            >
+            <div className={`relative h-96 lg:h-[550px] flex items-center justify-center transition-all duration-1000 delay-300 ${visible["hero"] ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
               <div className="absolute inset-0 bg-gradient-to-br from-accent/30 via-amber-500/10 to-transparent rounded-3xl blur-3xl animate-pulse" />
               <div className="relative z-10 text-center">
-                <div className="text-[160px] leading-none animate-float select-none">🐾</div>
-                <div className="mt-4 text-4xl font-display font-black text-accent tracking-tighter">Paw Play</div>
-                <div className="text-white/60 text-lg mt-1">Casino</div>
+                <div className="text-[140px] leading-none animate-float select-none">🐾</div>
+                <div className="text-4xl font-display font-black text-accent tracking-tighter">Paw Play</div>
+                <div className="text-white/60 text-lg">Casino</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-32 px-6 bg-accent/5">
+      {/* Stats bar */}
+      <section id="stats" className="py-8 px-6 border-y border-accent/10 bg-accent/3">
+        <div className={`max-w-7xl mx-auto ${anim("stats")}`}>
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-12">
+            {["Gates of Olympus","Sweet Bonanza","Book of Ra","Wolf Gold","Starlight Princess","Big Bass Bonanza"].map(name => (
+              <div key={name} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="text-accent">🔥</span>
+                <span>{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" className="py-24 px-6 bg-accent/5">
         <div className="max-w-7xl mx-auto">
-          <div
-            className={`text-center mb-20 transition-all duration-1000 ${visibleSections["features"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
+          <div className={`text-center mb-14 ${anim("features")}`}>
             <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Преимущества</span>
-            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-6">
-              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-                Всё для победы
-              </span>
+            <h2 className="text-4xl lg:text-5xl font-display font-black tracking-tighter mt-3">
+              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">Всё для победы</span>
             </h2>
           </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {FEATURES.map((f, i) => (
+              <div key={i} className={`group p-7 border border-accent/10 hover:border-accent/40 rounded-2xl bg-card/50 hover:bg-card/80 transition-all duration-500 cursor-pointer ${anim("features")}`} style={{ transitionDelay: `${i * 80}ms` }}>
+                <Icon name={f.icon} fallback="Star" size={36} className="mb-5 text-accent group-hover:scale-110 transition-transform" />
+                <h3 className="font-display font-bold text-lg mb-2">{f.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: "Zap",
-                title: "Мгновенные выплаты",
-                desc: "Выигрыши выводятся за несколько минут без лишних проверок",
-              },
-              {
-                icon: "Shield",
-                title: "Безопасная игра",
-                desc: "Лицензированная платформа с SSL-шифрованием и защитой данных",
-              },
-              {
-                icon: "TrendingUp",
-                title: "Щедрые джекпоты",
-                desc: "Прогрессивные джекпоты растут каждую секунду — ты можешь стать следующим победителем",
-              },
-              {
-                icon: "Gift",
-                title: "Бонусы каждый день",
-                desc: "Приветственный бонус 200%, кэшбэк, фриспины и VIP-привилегии",
-              },
-              {
-                icon: "Smartphone",
-                title: "Игра с телефона",
-                desc: "Полностью адаптированная мобильная версия — играй где угодно",
-              },
-              {
-                icon: "Headphones",
-                title: "Поддержка 24/7",
-                desc: "Живые операторы готовы помочь в любое время суток на русском языке",
-              },
-            ].map((item, i) => {
-              const isVisible = visibleSections["features"];
-              return (
-                <div
-                  key={i}
-                  className={`group p-8 border border-accent/10 hover:border-accent/40 rounded-2xl bg-card/50 hover:bg-card/80 transition-all duration-500 cursor-pointer backdrop-blur-sm ${
-                    isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                  }`}
-                  style={{ transitionDelay: `${i * 100}ms` }}
-                >
-                  <Icon name={item.icon} fallback="Star" size={40} className="mb-6 text-accent group-hover:scale-110 transition-transform" />
-                  <h3 className="font-display font-bold text-xl mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+      {/* Popular slots preview */}
+      <section id="popular" className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className={`flex items-end justify-between mb-10 ${anim("popular")}`}>
+            <div>
+              <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Хиты</span>
+              <h2 className="text-4xl font-display font-black mt-2">🔥 Популярные слоты</h2>
+            </div>
+            <Link to="/slots" className="flex items-center gap-2 text-accent text-sm font-bold hover:underline">
+              Все 500+ <Icon name="ArrowRight" size={14} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-10">
+            {FEATURED.map((slot, i) => (
+              <Link to="/slots" key={slot.id}
+                className={`group relative bg-black/50 border border-accent/10 hover:border-accent/50 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-accent/20 ${anim("popular")}`}
+                style={{ transitionDelay: `${i * 60}ms` }}>
+                <div className="absolute top-1.5 left-1.5 z-10">
+                  <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">🔥</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="how" className="py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className={`text-center mb-20 transition-all duration-1000 ${visibleSections["how"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
-            <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Как начать</span>
-            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4">
-              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-                Четыре шага до выигрыша
-              </span>
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { num: "01", title: "Регистрация", desc: "Создай аккаунт за 2 минуты — только email и пароль" },
-              { num: "02", title: "Бонус", desc: "Получи приветственный бонус 200% на первый депозит" },
-              { num: "03", title: "Выбор игры", desc: "Более 500 слотов, рулетка, покер и живые дилеры" },
-              { num: "04", title: "Выигрыш", desc: "Выводи деньги удобным способом — карта, криптовалюта или кошелёк" },
-            ].map((step, i) => {
-              const isVisible = visibleSections["how"];
-              return (
-                <div
-                  key={i}
-                  className={`relative transition-all duration-700 ${
-                    isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                  }`}
-                  style={{ transitionDelay: `${i * 150}ms` }}
-                >
-                  <div className="group bg-accent/10 hover:bg-accent/20 border border-accent/20 hover:border-accent/40 rounded-2xl p-8 h-full flex flex-col justify-between transition-all backdrop-blur-sm cursor-pointer">
-                    <div>
-                      <div className="text-5xl font-display font-black text-accent mb-4 group-hover:scale-110 transition-transform">
-                        {step.num}
-                      </div>
-                      <h3 className="font-display font-bold text-xl mb-2">{step.title}</h3>
-                      <p className="text-muted-foreground leading-relaxed">{step.desc}</p>
-                    </div>
-                  </div>
-                  {i < 3 && (
-                    <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-accent/40 to-transparent" />
-                  )}
+                <div className="relative h-24 overflow-hidden">
+                  <img src={slot.image} alt={slot.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-1 left-2 right-2 text-[9px] text-yellow-400 font-bold text-right">{slot.maxWin}</div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Slot Demo */}
-      <section id="slots" className="py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className={`text-center mb-16 transition-all duration-1000 ${visibleSections["slots"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
-            <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Демо-игра</span>
-            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-4">
-              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-                Попробуй прямо сейчас
-              </span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Бесплатный демо-слот — почувствуй атмосферу Paw Play Casino без регистрации
-            </p>
+                <div className="p-2">
+                  <div className="font-bold text-xs text-white truncate">{slot.name}</div>
+                  <div className="text-[10px] text-accent">RTP {slot.rtp}%</div>
+                </div>
+              </Link>
+            ))}
           </div>
 
-          <div
-            className={`transition-all duration-1000 delay-200 ${visibleSections["slots"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
-            <SlotMachine />
+          {/* New slots */}
+          <div className={`flex items-end justify-between mb-6 ${anim("popular")}`}>
+            <h2 className="text-2xl font-display font-black">✨ Новинки</h2>
+            <Link to="/slots?category=Новинки" className="flex items-center gap-2 text-accent text-sm font-bold hover:underline">
+              Смотреть все <Icon name="ArrowRight" size={14} />
+            </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Slot Catalog */}
-      <section id="catalog" className="py-32 px-6 bg-accent/5">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className={`text-center mb-16 transition-all duration-1000 ${visibleSections["catalog"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
-            <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Каталог игр</span>
-            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-4">
-              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-                500+ слотов
-              </span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Фрукты, приключения, Египет, космос и многое другое — выбирай свой любимый жанр
-            </p>
-          </div>
-          <div className={`transition-all duration-1000 delay-200 ${visibleSections["catalog"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <SlotCatalog />
-          </div>
-        </div>
-      </section>
-
-      {/* Bonuses */}
-      <section id="pricing" className="py-32 px-6 bg-accent/5">
-        <div className="max-w-6xl mx-auto">
-          <div className={`text-center mb-12 transition-all duration-1000 ${visibleSections["pricing"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Бонусы</span>
-            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-4">
-              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-                Активируй бонусы
-              </span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Нажми «Активировать» — и бонус автоматически применится к следующему депозиту
-            </p>
-          </div>
-          <div className={`transition-all duration-1000 delay-200 ${visibleSections["pricing"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <BonusSection />
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            {NEW_SLOTS.map((slot, i) => (
+              <Link to="/slots" key={slot.id}
+                className={`group relative bg-black/50 border border-accent/10 hover:border-accent/50 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 ${anim("popular")}`}
+                style={{ transitionDelay: `${i * 60}ms` }}>
+                <div className="absolute top-1.5 left-1.5 z-10">
+                  <span className="bg-accent text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">NEW</span>
+                </div>
+                <div className="relative h-24 overflow-hidden">
+                  <img src={slot.image} alt={slot.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-1 right-2 text-[9px] text-yellow-400 font-bold">{slot.maxWin}</div>
+                </div>
+                <div className="p-2">
+                  <div className="font-bold text-xs text-white truncate">{slot.name}</div>
+                  <div className="text-[10px] text-muted-foreground">{slot.provider}</div>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section id="cta" className="py-32 px-6">
-        <div
-          className={`max-w-4xl mx-auto text-center transition-all duration-1000 ${visibleSections["cta"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-        >
+      <section id="cta" className="py-28 px-6 bg-accent/5">
+        <div className={`max-w-3xl mx-auto text-center ${anim("cta")}`}>
           <div className="text-6xl mb-6">🐾</div>
-          <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mb-6">
-            <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-              Готов сорвать куш?
-            </span>
+          <h2 className="text-5xl font-display font-black tracking-tighter mb-5">
+            <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">Готов сорвать куш?</span>
           </h2>
-          <p className="text-xl text-muted-foreground mb-12 font-light max-w-2xl mx-auto">
-            Присоединяйся к сотням тысяч игроков Paw Play Casino и получи приветственный бонус уже сегодня.
+          <p className="text-xl text-muted-foreground mb-10 font-light max-w-xl mx-auto">
+            Присоединяйся к 100 000+ игрокам. Получи приветственный бонус +200% прямо сейчас.
           </p>
-          <button className="group px-10 py-5 bg-gradient-to-r from-accent to-amber-400 text-black rounded-full hover:shadow-2xl hover:shadow-accent/40 transition-all font-bold text-lg flex items-center gap-3 mx-auto">
-            Начать играть бесплатно
-            <Icon name="ArrowRight" size={20} className="group-hover:translate-x-1 transition" />
-          </button>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-accent/10 py-12 px-6 bg-background/50">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
-          <p>© 2026 Paw Play Casino — Играй ответственно 18+</p>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-white transition-colors">
-              Конфиденциальность
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Условия
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Ответственная игра
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Контакты
-            </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/slots" className="group px-10 py-5 bg-gradient-to-r from-accent to-amber-400 text-black rounded-full hover:shadow-2xl hover:shadow-accent/40 transition-all font-bold text-lg flex items-center gap-3 justify-center">
+              Начать играть
+              <Icon name="ArrowRight" size={20} className="group-hover:translate-x-1 transition" />
+            </Link>
+            <Link to="/deposit" className="px-10 py-5 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white text-center">
+              💳 Пополнить счёт
+            </Link>
           </div>
         </div>
-      </footer>
-    </div>
+      </section>
+    </Layout>
   );
-};
-
-export default Index;
+}
