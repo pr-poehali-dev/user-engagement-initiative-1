@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import SlotMachine from "@/components/SlotMachine";
+import SlotCatalog from "@/components/SlotCatalog";
 
 const Index = () => {
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const observers: Record<string, IntersectionObserver> = {};
-    const sectionIds = ["hero", "features", "how", "slots", "pricing", "cta"];
+    const sectionIds = ["hero", "features", "how", "slots", "catalog", "pricing", "cta"];
 
     sectionIds.forEach((id) => {
       const element = document.getElementById(id);
@@ -51,6 +52,9 @@ const Index = () => {
             </a>
             <a href="#slots" className="text-muted-foreground hover:text-white transition-colors">
               Играть
+            </a>
+            <a href="#catalog" className="text-muted-foreground hover:text-white transition-colors">
+              Каталог
             </a>
             <a href="#pricing" className="text-muted-foreground hover:text-white transition-colors">
               Бонусы
@@ -272,6 +276,28 @@ const Index = () => {
             className={`transition-all duration-1000 delay-200 ${visibleSections["slots"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
           >
             <SlotMachine />
+          </div>
+        </div>
+      </section>
+
+      {/* Slot Catalog */}
+      <section id="catalog" className="py-32 px-6 bg-accent/5">
+        <div className="max-w-7xl mx-auto">
+          <div
+            className={`text-center mb-16 transition-all duration-1000 ${visibleSections["catalog"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
+            <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Каталог игр</span>
+            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-4">
+              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
+                500+ слотов
+              </span>
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Фрукты, приключения, Египет, космос и многое другое — выбирай свой любимый жанр
+            </p>
+          </div>
+          <div className={`transition-all duration-1000 delay-200 ${visibleSections["catalog"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <SlotCatalog />
           </div>
         </div>
       </section>
