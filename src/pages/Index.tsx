@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
+import SlotMachine from "@/components/SlotMachine";
 
 const Index = () => {
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const observers: Record<string, IntersectionObserver> = {};
-    const sectionIds = ["hero", "features", "how", "pricing", "cta"];
+    const sectionIds = ["hero", "features", "how", "slots", "pricing", "cta"];
 
     sectionIds.forEach((id) => {
       const element = document.getElementById(id);
@@ -47,6 +48,9 @@ const Index = () => {
             </a>
             <a href="#how" className="text-muted-foreground hover:text-white transition-colors">
               Как начать
+            </a>
+            <a href="#slots" className="text-muted-foreground hover:text-white transition-colors">
+              Играть
             </a>
             <a href="#pricing" className="text-muted-foreground hover:text-white transition-colors">
               Бонусы
@@ -243,6 +247,31 @@ const Index = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Slot Demo */}
+      <section id="slots" className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div
+            className={`text-center mb-16 transition-all duration-1000 ${visibleSections["slots"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
+            <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Демо-игра</span>
+            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-4">
+              <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
+                Попробуй прямо сейчас
+              </span>
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Бесплатный демо-слот — почувствуй атмосферу Paw Play Casino без регистрации
+            </p>
+          </div>
+
+          <div
+            className={`transition-all duration-1000 delay-200 ${visibleSections["slots"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
+            <SlotMachine />
           </div>
         </div>
       </section>
