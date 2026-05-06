@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import Icon from "@/components/ui/icon";
-import { ALL_SLOTS, SLOT_CATEGORIES, type SlotCategory } from "@/data/slots";
+import { ALL_SLOTS, SLOT_CATEGORIES, type SlotCategory, type SlotGame } from "@/data/slots";
+import SlotModal from "@/components/SlotModal";
 
 const PAGE_SIZE = 40;
 
@@ -8,7 +9,7 @@ export default function SlotCatalog() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<SlotCategory | "Все">("Все");
   const [page, setPage] = useState(1);
-  const [playingId, setPlayingId] = useState<number | null>(null);
+  const [activeSlot, setActiveSlot] = useState<SlotGame | null>(null);
 
   const filtered = useMemo(() => {
     let list = ALL_SLOTS;
@@ -75,7 +76,7 @@ export default function SlotCatalog() {
           <div
             key={slot.id}
             className="group relative bg-black/50 border border-accent/10 hover:border-accent/50 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-accent/20"
-            onClick={() => setPlayingId(slot.id === playingId ? null : slot.id)}
+            onClick={() => setActiveSlot(slot)}
           >
             {/* Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
@@ -106,16 +107,11 @@ export default function SlotCatalog() {
             <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2 p-2">
               <button
                 className="w-full py-2 bg-gradient-to-r from-accent to-amber-400 text-black text-xs font-bold rounded-lg hover:shadow-lg transition-all"
-                onClick={(e) => { e.stopPropagation(); }}
+                onClick={(e) => { e.stopPropagation(); setActiveSlot(slot); }}
               >
-                🎮 Играть
+                🎮 Играть демо
               </button>
-              <button
-                className="w-full py-1.5 border border-accent/40 text-accent text-xs font-medium rounded-lg hover:bg-accent/10 transition-all"
-                onClick={(e) => { e.stopPropagation(); }}
-              >
-                Демо
-              </button>
+              <div className="text-[10px] text-white/50">{slot.category}</div>
             </div>
           </div>
         ))}
@@ -165,6 +161,11 @@ export default function SlotCatalog() {
             <Icon name="ChevronRight" size={16} />
           </button>
         </div>
+      )}
+
+      {/* Modal */}
+      {activeSlot && (
+        <SlotModal slot={activeSlot} onClose={() => setActiveSlot(null)} />
       )}
     </div>
   );
