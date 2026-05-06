@@ -88,30 +88,39 @@ export default function SlotCatalog() {
               )}
             </div>
 
-            {/* Emoji cover */}
-            <div className="h-20 flex items-center justify-center bg-gradient-to-br from-accent/5 to-black/60 text-5xl select-none group-hover:scale-110 transition-transform duration-300">
-              {slot.emoji}
+            {/* Image cover */}
+            <div className="relative h-24 overflow-hidden">
+              <img src={slot.image} alt={slot.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute bottom-1.5 left-2 right-2 flex justify-between items-end">
+                <span className="text-[9px] text-white/70 font-medium truncate">{slot.provider}</span>
+                <span className="text-[9px] text-yellow-400 font-bold">{slot.maxWin}</span>
+              </div>
             </div>
 
             {/* Info */}
-            <div className="p-2.5">
+            <div className="p-2">
               <div className="font-bold text-xs text-white leading-tight mb-1 truncate">{slot.name}</div>
-              <div className="text-[10px] text-muted-foreground truncate mb-1.5">{slot.provider}</div>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] text-accent font-medium">RTP {slot.rtp}%</span>
-                <span className="text-[10px] text-yellow-400 font-bold">{slot.maxWin}</span>
+                <span className="text-[10px] text-muted-foreground">{slot.lines} линий</span>
               </div>
             </div>
 
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2 p-2">
+            <div className="absolute inset-0 bg-black/85 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2 p-2">
               <button
                 className="w-full py-2 bg-gradient-to-r from-accent to-amber-400 text-black text-xs font-bold rounded-lg hover:shadow-lg transition-all"
                 onClick={(e) => { e.stopPropagation(); setActiveSlot(slot); }}
               >
-                🎮 Играть демо
+                🎰 Демо
               </button>
-              <div className="text-[10px] text-white/50">{slot.category}</div>
+              <button
+                className="w-full py-1.5 border border-accent/30 text-accent text-xs font-medium rounded-lg hover:bg-accent/10 transition-all"
+                onClick={(e) => { e.stopPropagation(); setActiveSlot(slot); }}
+              >
+                💰 На деньги
+              </button>
             </div>
           </div>
         ))}

@@ -1,52 +1,50 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import type { SlotGame } from "@/data/slots";
+import { useGameStore, gameStore } from "@/store/gameStore";
 
 const SYMBOLS_BY_CATEGORY: Record<string, string[]> = {
-  "Фрукты":       ["🍒", "🍋", "🍊", "🍇", "🍓", "🍉", "🍑", "⭐"],
-  "Приключения":  ["⚔️", "🔮", "💰", "🗝️", "🐉", "🌟", "🏹", "💎"],
-  "Египет":       ["🏺", "👁️", "🐍", "☀️", "🦅", "📜", "🔱", "💎"],
-  "Космос":       ["🚀", "🌌", "⭐", "🪐", "👽", "💫", "🌠", "🛸"],
-  "Животные":     ["🐾", "🦊", "🐺", "🦁", "🐯", "🦋", "🦅", "🐘"],
-  "Мифология":    ["⚡", "🔱", "🌊", "🔥", "🌪️", "🦄", "🐲", "🪄"],
-  "Пираты":       ["🏴‍☠️", "⚓", "💀", "🦜", "💎", "🗺️", "🔭", "🌊"],
-  "Азия":         ["🐉", "🌸", "🎎", "🀄", "⛩️", "🪔", "🎐", "🌺"],
-  "Ретро":        ["🎰", "🃏", "🎲", "🪙", "💛", "🔔", "⭐", "7️⃣"],
-  "Мегавейс":     ["💎", "🌈", "⚡", "🔥", "💥", "🌟", "🏆", "👑"],
+  "Египет":      ["📜", "🏺", "👁", "🔱", "🦅", "💎", "⚱️", "☀️", "🐍", "👑"],
+  "Мифология":   ["⚡", "🔱", "🌊", "🔥", "🌪️", "🦄", "🐲", "🪄", "⚔️", "👑"],
+  "Космос":      ["🚀", "🌌", "🪐", "👽", "💫", "🛸", "🌠", "🔭", "🌑", "👑"],
+  "Животные":    ["🐺", "🦁", "🐯", "🦊", "🦅", "🐘", "🦂", "🐲", "🦋", "👑"],
+  "Пираты":      ["⚓", "💀", "🦜", "🗡️", "🔭", "🗺️", "🌊", "💣", "🏴‍☠️", "👑"],
+  "Азия":        ["🐉", "🌸", "⛩️", "🪔", "🎐", "🀄", "🎎", "🏯", "🌺", "👑"],
+  "Ретро":       ["💎", "🔔", "⭐", "🃏", "🎲", "🪙", "🏆", "💛", "🎯", "👑"],
+  "Мегавейс":    ["💎", "🌈", "⚡", "🔥", "💥", "🌟", "🏆", "🎯", "🔮", "👑"],
+  "Приключения": ["⚔️", "🔮", "🗝️", "🐉", "🌟", "🏹", "💎", "🏰", "🛡️", "👑"],
+  "Тёмный мир":  ["💀", "🌑", "🔥", "⚔️", "🦇", "🕸️", "🧿", "🌙", "🪦", "👑"],
 };
 
-const DEFAULT_SYMBOLS = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "🐾", "7️⃣", "🔔", "🍀"];
+const DEFAULT_SYMBOLS = ["💎", "🔔", "⭐", "🃏", "🎲", "🪙", "🏆", "⚡", "🔥", "👑"];
+
+const MULTIPLIERS: Record<string, number> = {
+  "👑": 100, "💎": 20, "🏆": 15, "👽": 12, "🐉": 12, "🐲": 12,
+  "⚡": 10, "🔥": 10, "🌟": 10, "🌈": 10, "🔮": 10, "🌌": 8,
+  "🚀": 8, "🦁": 8, "⚔️": 7, "🔱": 7, "🌊": 6, "🦅": 6,
+  "📜": 5, "🏺": 5, "⚓": 5, "🐺": 5, "🌸": 5, "🔔": 4,
+  "⭐": 4, "🃏": 3, "🎲": 3, "🪙": 3, "💀": 6, "🌙": 5,
+};
 
 function getSymbols(category: string) {
   return SYMBOLS_BY_CATEGORY[category] ?? DEFAULT_SYMBOLS;
 }
 
-function buildReel(symbols: string[], size = 24) {
+function buildReel(symbols: string[], size = 30) {
   return Array.from({ length: size }, () => symbols[Math.floor(Math.random() * symbols.length)]);
 }
 
-const PAYOUTS: Record<string, number> = {
-  "🍒": 2, "🍋": 3, "🍊": 4, "🍇": 5, "⭐": 8, "💎": 15, "🐾": 20,
-  "7️⃣": 50, "🔔": 10, "🍀": 12, "⚔️": 6, "🔮": 8, "💰": 10, "🗝️": 7,
-  "🐉": 18, "🌟": 12, "🏹": 5, "🏺": 6, "👁️": 8, "🐍": 5, "☀️": 7,
-  "🦅": 9, "📜": 4, "🔱": 12, "🚀": 8, "🌌": 10, "🪐": 9, "👽": 11,
-  "💫": 7, "🌠": 8, "🛸": 12, "🐾": 20, "🦊": 6, "🐺": 8, "🦁": 12,
-  "🐯": 10, "🦋": 5, "🐘": 7, "⚡": 10, "🌊": 6, "🔥": 8, "🌪️": 9,
-  "🦄": 15, "🪄": 12, "🏴‍☠️": 10, "⚓": 5, "💀": 8, "🦜": 6, "🗺️": 7,
-  "🔭": 6, "🌸": 5, "🎎": 6, "🀄": 9, "⛩️": 8, "🪔": 6, "🎐": 5,
-  "🌺": 6, "🎰": 8, "🃏": 6, "🎲": 5, "🪙": 4, "💛": 3, "🌈": 12,
-  "💥": 9, "🏆": 15, "👑": 18,
-};
+const REEL_COUNT = 5;
 
 interface ReelProps {
   symbols: string[];
   spinning: boolean;
   stopped: boolean;
-  result: string;
+  result: string[];
 }
 
 function Reel({ symbols, spinning, stopped, result }: ReelProps) {
-  const [display, setDisplay] = useState([symbols[0], symbols[1], symbols[2]]);
+  const [display, setDisplay] = useState<string[]>([symbols[0], symbols[1], symbols[2]]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const idxRef = useRef(0);
 
@@ -59,20 +57,18 @@ function Reel({ symbols, spinning, stopped, result }: ReelProps) {
           symbols[(idxRef.current + 1) % symbols.length],
           symbols[(idxRef.current + 2) % symbols.length],
         ]);
-      }, 70);
+      }, 60);
     } else if (stopped) {
       if (timerRef.current) clearInterval(timerRef.current);
-      setDisplay([result, symbols[Math.floor(Math.random() * symbols.length)], symbols[Math.floor(Math.random() * symbols.length)]]);
+      setDisplay(result);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [spinning, stopped, result]);
+  }, [spinning, stopped, result, symbols]);
 
   return (
-    <div className="relative w-20 sm:w-24 h-44 sm:h-52 bg-black/70 rounded-2xl border-2 border-accent/30 overflow-hidden flex flex-col items-center justify-center gap-2">
-      <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-transparent to-black/90 pointer-events-none z-10" />
-      <div className="absolute top-[calc(50%-26px)] left-0 right-0 h-[52px] border-y-2 border-accent/70 z-20 pointer-events-none bg-accent/5" />
+    <div className="flex flex-col gap-1">
       {display.map((sym, i) => (
-        <div key={i} className={`text-3xl sm:text-4xl select-none leading-none transition-all duration-75 ${i === 1 ? "scale-125 z-30 drop-shadow-lg" : "opacity-40 scale-75"}`}>
+        <div key={i} className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl text-xl sm:text-2xl select-none border transition-all duration-100 ${i === 1 ? "border-accent/60 bg-accent/10 scale-105 shadow-lg shadow-accent/20" : "border-white/10 bg-black/40"}`}>
           {sym}
         </div>
       ))}
@@ -80,187 +76,271 @@ function Reel({ symbols, spinning, stopped, result }: ReelProps) {
   );
 }
 
-interface Props {
-  slot: SlotGame;
-  onClose: () => void;
+interface DepositModalProps { onClose: () => void; }
+function DepositModal({ onClose }: DepositModalProps) {
+  const [amount, setAmount] = useState(1000);
+  const [result, setResult] = useState<{ credited: number; bonus: number } | null>(null);
+  const PRESETS = [500, 1000, 2000, 5000, 10000];
+
+  function handleDeposit() {
+    const res = gameStore.deposit(amount);
+    setResult(res);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-sm bg-gray-950 border border-accent/40 rounded-3xl p-6 shadow-2xl shadow-accent/20">
+        <div className="flex items-center justify-between mb-5">
+          <div className="font-display font-black text-xl text-white">Пополнение баланса</div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg border border-white/10 text-muted-foreground hover:text-white transition-all">
+            <Icon name="X" size={16} />
+          </button>
+        </div>
+        {result ? (
+          <div className="text-center py-6">
+            <div className="text-5xl mb-3">🎉</div>
+            <div className="text-accent font-black text-2xl mb-1">+{result.credited.toLocaleString()} ₽</div>
+            {result.bonus > 0 && <div className="text-green-400 text-sm font-medium mb-3">Включая бонус: +{result.bonus.toLocaleString()} ₽</div>}
+            <div className="text-muted-foreground text-sm mb-5">Баланс пополнен успешно!</div>
+            <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-accent to-amber-400 text-black font-bold rounded-xl">Играть!</button>
+          </div>
+        ) : (
+          <>
+            <div className="text-sm text-muted-foreground mb-3">Сумма пополнения (₽)</div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {PRESETS.map(p => (
+                <button key={p} onClick={() => setAmount(p)} className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${amount === p ? "bg-accent text-black border-accent font-bold" : "border-accent/20 text-muted-foreground hover:border-accent/50 hover:text-white"}`}>
+                  {p.toLocaleString()}
+                </button>
+              ))}
+            </div>
+            <input type="number" value={amount} min={100} onChange={e => setAmount(Math.max(100, Number(e.target.value)))} className="w-full px-4 py-3 bg-black/50 border border-accent/20 rounded-xl text-white focus:outline-none focus:border-accent/60 mb-3 text-lg font-bold" />
+            <div className="text-xs text-muted-foreground mb-4">💳 Visa / Mastercard / СБП / Крипто</div>
+            <button onClick={handleDeposit} className="w-full py-4 bg-gradient-to-r from-accent to-amber-400 text-black font-black text-lg rounded-xl hover:shadow-xl hover:shadow-accent/30 transition-all">
+              Пополнить {amount.toLocaleString()} ₽
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
+interface Props { slot: SlotGame; onClose: () => void; }
+
 export default function SlotModal({ slot, onClose }: Props) {
+  const player = useGameStore();
   const symbols = getSymbols(slot.category);
-  const [reels] = useState(() => Array.from({ length: 3 }, () => buildReel(symbols)));
+  const [reels] = useState(() => Array.from({ length: REEL_COUNT }, () => buildReel(symbols)));
   const [spinning, setSpinning] = useState(false);
-  const [stopped, setStopped] = useState([false, false, false]);
-  const [results, setResults] = useState([symbols[0], symbols[0], symbols[0]]);
-  const [balance, setBalance] = useState(1000);
+  const [stoppedArr, setStoppedArr] = useState(Array(REEL_COUNT).fill(false));
+  const [results, setResults] = useState<string[][]>(() => Array.from({ length: REEL_COUNT }, () => [symbols[0], symbols[1], symbols[2]]));
   const [bet, setBet] = useState(10);
   const [lastWin, setLastWin] = useState<number | null>(null);
   const [message, setMessage] = useState("Нажми SPIN!");
-  const [win, setWin] = useState(false);
-  const [history, setHistory] = useState<{ result: string; amount: number }[]>([]);
+  const [winAnim, setWinAnim] = useState(false);
+  const [history, setHistory] = useState<{ sym: string; amount: number }[]>([]);
+  const [showDeposit, setShowDeposit] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const currentBalance = player.mode === "demo" ? player.demoBalance : player.realBalance;
 
   function clearTimers() { timers.current.forEach(clearTimeout); timers.current = []; }
 
-  function spin() {
-    if (spinning || balance < bet) return;
+  const spin = useCallback(() => {
+    if (spinning || currentBalance < bet) return;
     clearTimers();
-    setBalance(b => b - bet);
+    gameStore.deductBalance(bet);
     setLastWin(null);
-    setWin(false);
+    setWinAnim(false);
     setMessage("Крутим...");
-    setStopped([false, false, false]);
+    setStoppedArr(Array(REEL_COUNT).fill(false));
     setSpinning(true);
 
-    const newRes = Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
-    if (Math.random() < 0.30) { newRes[1] = newRes[0]; newRes[2] = newRes[0]; }
-    setResults(newRes);
+    const willWin = Math.random() < 0.28;
+    const winSym = symbols[Math.floor(Math.random() * (symbols.length - 1))];
 
-    [0, 1, 2].forEach(i => {
+    const newResults: string[][] = Array.from({ length: REEL_COUNT }, (_, ri) => {
+      const top = symbols[Math.floor(Math.random() * symbols.length)];
+      const mid = willWin && ri <= 2 ? winSym : symbols[Math.floor(Math.random() * symbols.length)];
+      const bot = symbols[Math.floor(Math.random() * symbols.length)];
+      return [top, mid, bot];
+    });
+    setResults(newResults);
+
+    Array.from({ length: REEL_COUNT }).forEach((_, i) => {
       const t = setTimeout(() => {
-        setStopped(prev => { const n = [...prev]; n[i] = true; return n; });
-        if (i === 2) {
-          const t2 = setTimeout(() => {
-            setSpinning(false);
-            evaluate(newRes, bet);
-          }, 300);
+        setStoppedArr(prev => { const n = [...prev]; n[i] = true; return n; });
+        if (i === REEL_COUNT - 1) {
+          const t2 = setTimeout(() => { setSpinning(false); evaluate(newResults, bet); }, 300);
           timers.current.push(t2);
         }
-      }, 800 + i * 550);
+      }, 600 + i * 400);
       timers.current.push(t);
     });
-  }
+  }, [spinning, currentBalance, bet, symbols]);
 
-  function evaluate(res: string[], betAmt: number) {
-    if (res[0] === res[1] && res[1] === res[2]) {
-      const mult = PAYOUTS[res[0]] ?? 3;
-      const prize = betAmt * mult;
-      setBalance(b => b + prize);
+  function evaluate(res: string[][], betAmt: number) {
+    const midRow = res.map(r => r[1]);
+    const counts: Record<string, number> = {};
+    midRow.forEach(s => { counts[s] = (counts[s] ?? 0) + 1; });
+    const wildCount = counts["👑"] ?? 0;
+    let bestVal = 0, bestSym = "", bestCount = 0;
+
+    Object.entries(counts).forEach(([sym, cnt]) => {
+      if (sym === "👑") return;
+      const total = cnt + wildCount;
+      const mult = MULTIPLIERS[sym] ?? 2;
+      if (total >= 3 && total * mult > bestVal) { bestVal = total * mult; bestSym = sym; bestCount = total; }
+    });
+    if (wildCount >= 3 && !bestSym) { bestCount = wildCount; bestSym = "👑"; bestVal = wildCount * 100; }
+
+    if (bestCount >= 3) {
+      const prize = betAmt * bestVal;
+      gameStore.addWin(prize);
       setLastWin(prize);
-      setMessage(`🎉 ДЖЕКПОТ! ×${mult} = +${prize}!`);
-      setWin(true);
-      setHistory(h => [{ result: `${res[0]}${res[1]}${res[2]}`, amount: prize }, ...h.slice(0, 4)]);
-    } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
-      const prize = Math.floor(betAmt * 1.5);
-      setBalance(b => b + prize);
-      setLastWin(prize);
-      setMessage(`✨ Близко! +${prize}`);
-      setHistory(h => [{ result: `${res[0]}${res[1]}${res[2]}`, amount: prize }, ...h.slice(0, 4)]);
+      setWinAnim(true);
+      const label = bestCount === 5 ? "🎉 ДЖЕКПОТ!" : bestCount === 4 ? "🔥 БОЛЬШОЙ ВЫИГРЫШ!" : "✨ ВЫИГРЫШ!";
+      setMessage(`${label} ×${bestVal} = +${prize}`);
+      setHistory(h => [{ sym: bestSym, amount: prize }, ...h.slice(0, 5)]);
     } else {
       setMessage("Попробуй ещё раз!");
-      setHistory(h => [{ result: `${res[0]}${res[1]}${res[2]}`, amount: 0 }, ...h.slice(0, 4)]);
+      setHistory(h => [{ sym: "✗", amount: 0 }, ...h.slice(0, 5)]);
     }
   }
 
-  // Close on backdrop click
-  function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) onClose();
-  }
-
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+  useEffect(() => () => clearTimers(), []);
+
+  const BET_STEPS = [5, 10, 25, 50, 100, 200, 500];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
-      onClick={handleBackdrop}
-    >
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-accent/40 rounded-3xl shadow-2xl shadow-accent/20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-sm"
+        onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="relative w-full max-w-2xl bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-accent/40 rounded-3xl shadow-2xl shadow-accent/20 overflow-hidden max-h-[96vh] overflow-y-auto">
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-accent/10">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{slot.emoji}</span>
-            <div>
-              <div className="font-display font-black text-lg text-white leading-tight">{slot.name}</div>
-              <div className="text-xs text-muted-foreground">{slot.provider} · RTP {slot.rtp}% · Max {slot.maxWin}</div>
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-gray-950/95 backdrop-blur flex items-center justify-between px-4 sm:px-6 py-3 border-b border-accent/10">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src={slot.image} alt={slot.name} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="font-display font-black text-sm sm:text-base text-white leading-tight truncate">{slot.name}</div>
+                <div className="text-[10px] text-muted-foreground">{slot.provider} · 5 барабанов · {slot.lines} линий · RTP {slot.rtp}%</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex rounded-xl overflow-hidden border border-accent/20 text-xs font-bold">
+                <button onClick={() => gameStore.setMode("demo")} className={`px-2.5 py-1.5 transition-all ${player.mode === "demo" ? "bg-accent text-black" : "text-muted-foreground hover:text-white"}`}>Демо</button>
+                <button onClick={() => gameStore.setMode("real")} className={`px-2.5 py-1.5 transition-all ${player.mode === "real" ? "bg-accent text-black" : "text-muted-foreground hover:text-white"}`}>Реальные</button>
+              </div>
+              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl border border-white/10 text-muted-foreground hover:text-white transition-all flex-shrink-0">
+                <Icon name="X" size={16} />
+              </button>
             </div>
           </div>
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl border border-accent/20 text-muted-foreground hover:text-white hover:border-accent/50 transition-all">
-            <Icon name="X" size={18} />
-          </button>
-        </div>
 
-        {/* Top lights */}
-        <div className="flex justify-center gap-2 pt-4">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${win ? "bg-accent animate-pulse" : "bg-accent/25"}`} style={{ animationDelay: `${i * 80}ms` }} />
-          ))}
-        </div>
-
-        {/* Reels */}
-        <div className="flex gap-3 justify-center px-6 py-5">
-          {reels.map((syms, i) => (
-            <Reel key={i} symbols={syms} spinning={spinning} stopped={stopped[i]} result={results[i]} />
-          ))}
-        </div>
-
-        {/* Message */}
-        <div className={`text-center h-7 mb-3 px-6 transition-all duration-300 ${win ? "scale-110" : ""}`}>
-          <span className={`font-bold text-sm ${lastWin ? "text-accent" : "text-muted-foreground"}`}>{message}</span>
-        </div>
-
-        {/* Stats row */}
-        <div className="mx-6 mb-4 grid grid-cols-3 bg-black/50 rounded-2xl overflow-hidden border border-accent/10">
-          <div className="flex flex-col items-center py-3 border-r border-accent/10">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Баланс</span>
-            <span className="text-lg font-black text-white">{balance}<span className="text-sm ml-1">🪙</span></span>
-          </div>
-          <div className="flex flex-col items-center py-3 border-r border-accent/10">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Ставка</span>
-            <div className="flex items-center gap-1.5">
-              <button onClick={() => setBet(b => Math.max(5, b - 5))} disabled={spinning} className="w-5 h-5 rounded-full border border-accent/30 text-accent text-xs font-bold hover:bg-accent/20 disabled:opacity-40">−</button>
-              <span className="text-lg font-black text-accent w-8 text-center">{bet}</span>
-              <button onClick={() => setBet(b => Math.min(200, b + 5))} disabled={spinning} className="w-5 h-5 rounded-full border border-accent/30 text-accent text-xs font-bold hover:bg-accent/20 disabled:opacity-40">+</button>
+          {/* Balance bar */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-black/30 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${player.mode === "demo" ? "bg-blue-500/20 text-blue-400" : "bg-green-500/20 text-green-400"}`}>
+                {player.mode === "demo" ? "ДЕМО" : "РЕАЛЬНЫЕ"}
+              </span>
+              <span className="font-black text-white text-sm">{currentBalance.toLocaleString()} {player.mode === "demo" ? "🪙" : "₽"}</span>
             </div>
-          </div>
-          <div className="flex flex-col items-center py-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Выигрыш</span>
-            <span className="text-lg font-black text-accent">{lastWin ? `+${lastWin}` : "—"}</span>
-          </div>
-        </div>
-
-        {/* Spin */}
-        <div className="px-6 mb-4">
-          <button
-            onClick={spin}
-            disabled={spinning || balance < bet}
-            className="w-full py-4 bg-gradient-to-r from-accent via-amber-400 to-accent text-black font-black text-xl rounded-2xl hover:shadow-2xl hover:shadow-accent/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 uppercase tracking-wider"
-          >
-            {spinning ? "Крутится..." : "🎰 SPIN"}
-          </button>
-          {balance < bet && (
-            <button onClick={() => { setBalance(b => b + 500); setMessage("+500 монет!"); }} className="w-full mt-2 py-2.5 border border-accent/30 rounded-xl text-accent text-sm font-semibold hover:bg-accent/10 transition-all">
-              + Пополнить баланс
+            <button
+              onClick={() => player.mode === "real" ? setShowDeposit(true) : gameStore.addDemoBalance(1000)}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${player.mode === "real" ? "bg-accent/20 border-accent/30 text-accent hover:bg-accent/30" : "bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30"}`}
+            >
+              <Icon name="Plus" size={12} />
+              {player.mode === "real" ? "Пополнить" : "+1000"}
             </button>
-          )}
-        </div>
+          </div>
 
-        {/* History */}
-        {history.length > 0 && (
-          <div className="mx-6 mb-5">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">История спинов</div>
-            <div className="flex gap-2 flex-wrap">
-              {history.map((h, i) => (
-                <div key={i} className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border ${h.amount > 0 ? "border-accent/30 bg-accent/10 text-accent" : "border-white/10 bg-white/5 text-muted-foreground"}`}>
-                  <span>{h.result}</span>
-                  {h.amount > 0 && <span>+{h.amount}</span>}
+          {/* Reels */}
+          <div className="px-3 sm:px-5 pt-4 pb-2">
+            <div className="flex justify-center gap-1 mb-3">
+              {[...Array(9)].map((_, i) => (
+                <div key={i} className={`w-2 h-2 rounded-full transition-all duration-200 ${winAnim ? "bg-accent animate-pulse" : "bg-accent/20"}`} style={{ animationDelay: `${i * 60}ms` }} />
+              ))}
+            </div>
+
+            <div className="relative bg-black/70 rounded-2xl border-2 border-accent/20 p-2 sm:p-3 mb-3 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,197,50,0.04)_0%,transparent_70%)] pointer-events-none" />
+              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-accent/20 pointer-events-none" />
+              <div className="flex gap-1.5 sm:gap-2 justify-center">
+                {reels.map((syms, i) => (
+                  <Reel key={i} symbols={syms} spinning={spinning} stopped={stoppedArr[i]} result={results[i]} />
+                ))}
+              </div>
+            </div>
+
+            {/* Message */}
+            <div className={`text-center h-6 mb-3 transition-all duration-300 ${winAnim ? "scale-110" : ""}`}>
+              <span className={`font-bold text-xs sm:text-sm ${lastWin ? "text-accent" : "text-muted-foreground"}`}>{message}</span>
+            </div>
+
+            {/* Bet row */}
+            <div className="flex items-center justify-between gap-2 mb-3 bg-black/40 rounded-2xl px-3 sm:px-4 py-2.5 border border-white/5">
+              <div className="text-center">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Ставка</div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => { const i = BET_STEPS.indexOf(bet); if (i > 0) setBet(BET_STEPS[i - 1]); }} disabled={spinning || bet === BET_STEPS[0]} className="w-6 h-6 rounded-lg border border-accent/30 text-accent text-xs font-bold hover:bg-accent/20 disabled:opacity-30">−</button>
+                  <span className="text-base font-black text-accent w-10 text-center">{bet}</span>
+                  <button onClick={() => { const i = BET_STEPS.indexOf(bet); if (i < BET_STEPS.length - 1) setBet(BET_STEPS[i + 1]); }} disabled={spinning || bet === BET_STEPS[BET_STEPS.length - 1]} className="w-6 h-6 rounded-lg border border-accent/30 text-accent text-xs font-bold hover:bg-accent/20 disabled:opacity-30">+</button>
                 </div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Выигрыш</div>
+                <div className="text-base font-black text-accent">{lastWin ? `+${lastWin.toLocaleString()}` : "—"}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Max</div>
+                <div className="text-sm font-bold text-yellow-400">{slot.maxWin}</div>
+              </div>
+            </div>
+
+            {/* SPIN */}
+            <button onClick={spin} disabled={spinning || currentBalance < bet}
+              className="w-full py-4 bg-gradient-to-r from-accent via-amber-400 to-accent text-black font-black text-xl rounded-2xl hover:shadow-2xl hover:shadow-accent/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 uppercase tracking-widest mb-2">
+              {spinning ? "⏳ Крутится..." : "🎰 SPIN"}
+            </button>
+
+            {currentBalance < bet && (
+              <button onClick={() => player.mode === "real" ? setShowDeposit(true) : gameStore.addDemoBalance(1000)}
+                className="w-full py-2.5 border border-accent/30 rounded-xl text-accent text-sm font-semibold hover:bg-accent/10 transition-all mb-2">
+                {player.mode === "real" ? "💳 Пополнить счёт" : "🪙 Получить монеты"}
+              </button>
+            )}
+
+            {/* History */}
+            {history.length > 0 && (
+              <div className="mb-2">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1.5">Последние спины</div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {history.map((h, i) => (
+                    <div key={i} className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${h.amount > 0 ? "border-accent/30 bg-accent/10 text-accent" : "border-white/10 bg-white/5 text-muted-foreground"}`}>
+                      <span>{h.sym}</span>
+                      {h.amount > 0 && <span>+{h.amount}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center gap-1 pb-3">
+              {[...Array(9)].map((_, i) => (
+                <div key={i} className={`w-2 h-2 rounded-full transition-all ${winAnim ? "bg-amber-400 animate-pulse" : "bg-accent/20"}`} style={{ animationDelay: `${i * 60}ms` }} />
               ))}
             </div>
           </div>
-        )}
-
-        {/* Bottom lights */}
-        <div className="flex justify-center gap-2 pb-5">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${win ? "bg-amber-400 animate-pulse" : "bg-accent/25"}`} style={{ animationDelay: `${i * 80}ms` }} />
-          ))}
         </div>
       </div>
-    </div>
+      {showDeposit && <DepositModal onClose={() => setShowDeposit(false)} />}
+    </>
   );
 }

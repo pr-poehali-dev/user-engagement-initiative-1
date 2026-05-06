@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import SlotMachine from "@/components/SlotMachine";
 import SlotCatalog from "@/components/SlotCatalog";
+import BonusSection from "@/components/BonusSection";
 
 const Index = () => {
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
@@ -302,77 +303,22 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Pricing / Bonuses */}
+      {/* Bonuses */}
       <section id="pricing" className="py-32 px-6 bg-accent/5">
-        <div className="max-w-5xl mx-auto">
-          <div
-            className={`text-center mb-20 transition-all duration-1000 ${visibleSections["pricing"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
+        <div className="max-w-6xl mx-auto">
+          <div className={`text-center mb-12 transition-all duration-1000 ${visibleSections["pricing"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <span className="text-xs font-medium tracking-widest text-accent/60 uppercase">Бонусы</span>
-            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4">
+            <h2 className="text-5xl lg:text-6xl font-display font-black tracking-tighter mt-4 mb-4">
               <span className="bg-gradient-to-r from-white via-white to-accent/40 bg-clip-text text-transparent">
-                Бонусные пакеты
+                Активируй бонусы
               </span>
             </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Нажми «Активировать» — и бонус автоматически применится к следующему депозиту
+            </p>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {[
-              {
-                name: "Стартовый",
-                price: "+100% к депозиту",
-                features: ["До 10 000 ₽ бонуса", "50 бесплатных спинов", "Кэшбэк 5% каждую неделю", "Доступ ко всем слотам"],
-                highlight: false,
-              },
-              {
-                name: "VIP",
-                price: "+200% к депозиту",
-                features: ["До 50 000 ₽ бонуса", "200 бесплатных спинов", "Кэшбэк 15% + персональный менеджер", "Приоритетный вывод средств"],
-                highlight: true,
-              },
-            ].map((plan, i) => {
-              const isVisible = visibleSections["pricing"];
-              return (
-                <div
-                  key={i}
-                  className={`group relative transition-all duration-700 ${
-                    isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                  } ${plan.highlight ? "md:scale-105" : ""}`}
-                  style={{ transitionDelay: `${i * 200}ms` }}
-                >
-                  {plan.highlight && (
-                    <div className="absolute -inset-1 bg-gradient-to-r from-accent via-amber-400 to-accent/60 rounded-3xl opacity-20 blur-xl group-hover:opacity-30 transition" />
-                  )}
-                  <div
-                    className={`relative p-10 border rounded-2xl h-full flex flex-col justify-between backdrop-blur-sm transition-all ${
-                      plan.highlight ? "border-accent/40 bg-accent/10" : "border-accent/10 bg-card/50 hover:bg-card/80"
-                    }`}
-                  >
-                    <div>
-                      <h3 className="font-display font-bold text-2xl mb-2">{plan.name}</h3>
-                      <p className="text-4xl font-black text-accent mb-8">{plan.price}</p>
-                      <ul className="space-y-4 mb-10">
-                        {plan.features.map((f, j) => (
-                          <li key={j} className="flex gap-3 text-sm items-start">
-                            <Icon name="ArrowRight" size={16} className="text-accent flex-shrink-0 mt-1" />
-                            <span className="text-foreground/80">{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <button
-                      className={`w-full px-6 py-4 rounded-xl font-semibold transition-all ${
-                        plan.highlight
-                          ? "bg-gradient-to-r from-accent to-amber-400 text-black hover:shadow-xl hover:shadow-accent/40"
-                          : "border border-accent/20 hover:border-accent/40 hover:bg-accent/5 text-white"
-                      }`}
-                    >
-                      {plan.highlight ? "Получить VIP-бонус" : "Активировать бонус"}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+          <div className={`transition-all duration-1000 delay-200 ${visibleSections["pricing"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <BonusSection />
           </div>
         </div>
       </section>
